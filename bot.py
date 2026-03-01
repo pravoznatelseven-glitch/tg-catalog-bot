@@ -249,7 +249,13 @@ async def on_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_products(products)
 
         await query.answer("✅ Оновлено", show_alert=True)
-
+if query.data.startswith("delete:"):
+    idx = int(query.data.split(":")[1])
+    products = load_products()
+    removed = products.pop(idx)
+    save_products(products)
+    await query.answer(f"✅ Товар '{removed['name']}' видалено", show_alert=True)
+    await query.message.delete()  # видаляємо повідомлення з ботом
 
 # ================= MAIN =================
 app = ApplicationBuilder().token(TOKEN).build()
@@ -261,5 +267,6 @@ app.add_handler(CallbackQueryHandler(on_buttons))
 
 
 app.run_polling()
+
 
 
