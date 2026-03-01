@@ -208,9 +208,9 @@ async def send_category(chat_id, bot, category, viewer_id):
 
         markup = InlineKeyboardMarkup(buttons) if buttons else None
 
-        await bot.send_photo(
+        await bot.send_document(
             chat_id=chat_id,
-            photo=p["file_id"],
+            document=p["file_id"],
             caption=build_caption(p),
             parse_mode=ParseMode.HTML,
             reply_markup=markup
@@ -220,7 +220,6 @@ async def send_category(chat_id, bot, category, viewer_id):
 
     if not sent_any:
         await bot.send_message(chat_id, "У цій категорії немає товарів.")
-
 
 # ================= КНОПКИ =================
 async def on_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -258,3 +257,4 @@ app.add_handler(CallbackQueryHandler(on_buttons))
 
 
 app.run_polling()
+
