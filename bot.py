@@ -206,10 +206,10 @@ async def send_category(chat_id, bot, category, viewer_id):
                 )
             ]) 
             
-        if admin_view:
-    buttons.append([
-        InlineKeyboardButton("🗑 Видалити товар", callback_data=f"delete:{i}")
-    ])
+       if admin_view:
+           buttons.append([
+           InlineKeyboardButton("🗑 Видалити товар", callback_data=f"delete:{i}")
+           ])
 
         markup = InlineKeyboardMarkup(buttons) if buttons else None
 
@@ -268,6 +268,7 @@ app.add_handler(CallbackQueryHandler(on_buttons))
 
 
 app.run_polling()
+
 
 
 
