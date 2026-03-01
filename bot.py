@@ -208,9 +208,9 @@ async def send_category(chat_id, bot, category, viewer_id):
 
         markup = InlineKeyboardMarkup(buttons) if buttons else None
 
-        await bot.send_document(
+        await bot.send_photo(
             chat_id=chat_id,
-            document=p["file_id"],
+            photo=p["file_id"],
             caption=build_caption(p),
             parse_mode=ParseMode.HTML,
             reply_markup=markup
@@ -255,5 +255,6 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("add", add_cmd))
 app.add_handler(MessageHandler(filters.PHOTO, on_photo))
 app.add_handler(CallbackQueryHandler(on_buttons))
+
 
 app.run_polling()
