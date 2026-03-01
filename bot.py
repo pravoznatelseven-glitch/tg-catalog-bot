@@ -186,7 +186,6 @@ async def send_category(chat_id, bot, category, viewer_id):
                     url="https://t.me/antwerp0vape"
                 )
             ])
-
         if p["stock"].get("a2"):
             buttons.append([
                 InlineKeyboardButton(
@@ -195,26 +194,28 @@ async def send_category(chat_id, bot, category, viewer_id):
                 )
             ])
 
-        # Адмін-кнопка
+        # Адмін-кнопки
         if admin_view:
             key = user_admin_key(viewer_id)
             cur = bool(p["stock"].get(key, False))
             buttons.append([
                 InlineKeyboardButton(
                     f"Моя наявність: {status_emoji(cur)} (змінити)",
-                    callback_data=f"toggle:{key}:{i}"
+                    callback_data=f"toggle:{key}:{p['id']}"  # використовується ID товару
                 )
-            ]) 
-        if admin_view:
+            ])
             buttons.append([
-            InlineKeyboardButton("🗑 Видалити товар", callback_data=f"delete:{i}")
+                InlineKeyboardButton(
+                    "🗑 Видалити товар",
+                    callback_data=f"delete:{p['id']}"
+                )
             ])
 
         markup = InlineKeyboardMarkup(buttons) if buttons else None
 
-        await bot.send_document(
+        await bot.send_photo(
             chat_id=chat_id,
-            document=p["file_id"],
+            photo=p["file_id"],
             caption=build_caption(p),
             parse_mode=ParseMode.HTML,
             reply_markup=markup
@@ -225,6 +226,7 @@ async def send_category(chat_id, bot, category, viewer_id):
     if not sent_any:
         await bot.send_message(chat_id, "У цій категорії немає товарів.")
 
+
 # ================= КНОПКИ =================
 async def on_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -232,30 +234,70 @@ async def on_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = query.from_user.id
     chat_id = query.message.chat_id
+    products = load_products()
 
+    # КАТЕГОРІЯ
     if query.data.startswith("cat:"):
         category = query.data.split(":")[1]
         await send_category(chat_id, context.bot, category, user_id)
 
-    if query.data.startswith("toggle:"):
-        _, key, idx = query.data.split(":")
-        idx = int(idx)
-
+    # TOGGLE НАЯВНІСТІ
+    elif query.data.startswith("toggle:"):
+        _, key, product_id = query.data.split(":")
         if user_admin_key(user_id) != key:
             return
 
-        products = load_products()
-        products[idx]["stock"][key] = not products[idx]["stock"].get(key)
+        # шукаємо товар по ID
+        idx = next((i for i, p in enumerate(products) if p["id"] == product_id), None)
+        if idx is None:
+            await query.answer("❗ Товар не знайдено", show_alert=True)
+            return
+
+        products[idx]["stock"][key] = not products[idx]["stock"].get(key, False)
         save_products(products)
 
+        # Оновлюємо повідомлення з новим caption
+        p = products[idx]
+        buttons = []
+
+        key_admin = user_admin_key(user_id)
+        cur = bool(p["stock"].get(key_admin, False))
+        buttons.append([
+            InlineKeyboardButton(
+                f"Моя наявність: {status_emoji(cur)} (змінити)",
+                callback_data=f"toggle:{key_admin}:{p['id']}"
+            )
+        ])
+        buttons.append([
+            InlineKeyboardButton(
+                "🗑 Видалити товар",
+                callback_data=f"delete:{p['id']}"
+            )
+        ])
+        markup = InlineKeyboardMarkup(buttons)
+
+        await query.message.edit_caption(
+            caption=build_caption(p),
+            parse_mode=ParseMode.HTML,
+            reply_markup=markup
+        )
         await query.answer("✅ Оновлено", show_alert=True)
-if query.data.startswith("delete:"):
-    idx = int(query.data.split(":")[1])
-    products = load_products()
-    removed = products.pop(idx)
-    save_products(products)
-    await query.answer(f"✅ Товар '{removed['name']}' видалено", show_alert=True)
-    await query.message.delete()  # видаляємо повідомлення з ботом
+
+    # DELETE ТОВАРУ
+    elif query.data.startswith("delete:"):
+        product_id = query.data.split(":")[1]
+
+        # шукаємо товар по ID
+        idx = next((i for i, p in enumerate(products) if p["id"] == product_id), None)
+        if idx is None:
+            await query.answer("❗ Товар не знайдено", show_alert=True)
+            return
+
+        removed = products.pop(idx)
+        save_products(products)
+
+        await query.answer(f"✅ Товар '{removed['name']}' видалено", show_alert=True)
+        await query.message.delete()  # видаляємо повідомлення з ботом
 
 # ================= MAIN =================
 app = ApplicationBuilder().token(TOKEN).build()
@@ -267,6 +309,7 @@ app.add_handler(CallbackQueryHandler(on_buttons))
 
 
 app.run_polling()
+
 
 
 
