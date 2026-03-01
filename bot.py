@@ -204,7 +204,8 @@ async def send_category(chat_id, bot, category, viewer_id):
                     f"Моя наявність: {status_emoji(cur)} (змінити)",
                     callback_data=f"toggle:{key}:{i}"
                 )
-            ])
+            ]) 
+            
         if admin_view:
     buttons.append([
         InlineKeyboardButton("🗑 Видалити товар", callback_data=f"delete:{i}")
@@ -267,6 +268,7 @@ app.add_handler(CallbackQueryHandler(on_buttons))
 
 
 app.run_polling()
+
 
 
 
