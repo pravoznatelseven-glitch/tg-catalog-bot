@@ -14,7 +14,7 @@ from telegram.ext import (
     filters,
 )
 
-TOKEN = "8368706232:AAEJUi3_cFMmQVjWsiJQ27uReyyJUN87YqE"
+TOKEN = "8368706232:AAHEMTW0e4BE88XaNuG99xgfLDj4sBDYs3U"
 
 # ===== АДМІНИ =====
 ADMIN_1_ID = 6352725328
